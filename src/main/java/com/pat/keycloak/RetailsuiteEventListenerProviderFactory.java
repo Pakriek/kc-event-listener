@@ -15,7 +15,7 @@ public class RetailsuiteEventListenerProviderFactory
 
     @Override
     public EventListenerProvider create(KeycloakSession keycloakSession) {
-        return new com.pat.keycloak.RetailsuiteEventListenerProvider(keycloakSession, this.cfg);
+        return new RetailsuiteEventListenerProvider(keycloakSession, this.cfg);
     }
 
     @Override
