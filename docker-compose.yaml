@@ -1,0 +1,42 @@
+version: "3"
+
+services:
+  pubsub:
+    container_name: pubsub
+    image: gcr.io/google.com/cloudsdktool/cloud-sdk:427.0.0-emulators
+    environment:
+      - PUBSUB_PROJECT_ID=project-test
+    entrypoint: gcloud beta emulators pubsub start --project=project-test --host-port="0.0.0.0:8085"
+    ports:
+      - 8085:8085
+    restart: unless-stopped
+  postgres:
+    image: postgres:latest
+    environment:
+      - POSTGRES_DB=keycloak
+      - POSTGRES_USER=keycloak
+      - POSTGRES_PASSWORD=keycloak
+    ports:
+      - 5432:5432
+    restart: unless-stopped
+  keycloak:
+    image: mykeycloak
+    environment:
+      - KEYCLOAK_ADMIN=kcadmin
+      - KEYCLOAK_ADMIN_PASSWORD=kcadmin
+      - KC_HTTPS_CERTIFICATE_FILE=/etc/x509/https/tls.crt
+      - KC_HTTPS_CERTIFICATE_KEY_FILE=/etc/x509/https/tls.key
+      - PUBSUB_EMULATOR_HOST=pubsub:8085
+      - GCP_ADMIN_EVENT_TOPIC_ID=keycloak-events
+      - GCP_PROJECT_ID=project-test
+    ports:
+      - 8443:8443
+    depends_on:
+      - postgres
+    volumes:
+      - ./import:/opt/keycloak/data/import
+      - ./providers:/opt/keycloak/providers
+      - ./certs/keycloak-server.crt.pem:/etc/x509/https/tls.crt
+      - ./certs/keycloak-server.key.pem:/etc/x509/https/tls.key
+    restart: unless-stopped
+    command: start-dev --import-realm
